@@ -3,7 +3,15 @@
     "description": "Extension pour la gestion des tâches",
     "viewName": "TaskFlows",
     "addTask": "Ajouter une tâche",
+    "addSubTask": "Ajouter une sous-tâche",
     "addTaskLabel": "Ajouter une tâche...",
     "addTaskPlaceholder": "Nom de la tâche",
-    "addTaskPrompt": "Entrez le nom de la nouvelle tâche"
+    "addTaskPrompt": "Entrez le nom de la nouvelle tâche",
+    "editTask": "Modifier la tâche",
+    "deleteTask": "Supprimer la tâche",
+    "deleteTaskPrompt": "Êtes-vous sûr de vouloir supprimer cette tâche ?",
+    "deleteConfirm": "Supprimer",
+    "deleteCancel": "Annuler",
+    "toggleTaskCompletion": "Marquer comme terminé/non terminé",
+    "toggleAllCollapsed": "Plier/Déplier toutes les tâches"
 } 

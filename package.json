@@ -24,6 +24,31 @@
                 "command": "taskflows.addTask",
                 "title": "%addTask%",
                 "icon": "$(add)"
+            },
+            {
+                "command": "taskflows.addSubTask",
+                "title": "%addSubTask%",
+                "icon": "$(add)"
+            },
+            {
+                "command": "taskflows.editTask",
+                "title": "%editTask%",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "taskflows.deleteTask",
+                "title": "%deleteTask%",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "taskflows.toggleTaskCompletion",
+                "title": "%toggleTaskCompletion%",
+                "icon": "$(check)"
+            },
+            {
+                "command": "taskflows.toggleAllCollapsed",
+                "title": "%toggleAllCollapsed%",
+                "icon": "$(fold)"
             }
         ],
         "keybindings": [
@@ -37,12 +62,34 @@
                 {
                     "command": "taskflows.addTask",
                     "when": "view == TaskFlows",
-                    "group": "primary"
+                    "group": "navigation"
                 },
                 {
-                    "command": "taskflows.addTask",
+                    "command": "taskflows.toggleAllCollapsed",
                     "when": "view == TaskFlows",
-                    "group": "navigation@0"
+                    "group": "navigation@2"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "taskflows.toggleTaskCompletion",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "taskflows.addSubTask",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "taskflows.editTask",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "1_modification@1"
+                },
+                {
+                    "command": "taskflows.deleteTask",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "1_modification@2"
                 }
             ]
         }
@@ -59,11 +106,15 @@
     "devDependencies": {
         "@types/mocha": "^10.0.10",
         "@types/node": "~18.19.68",
+        "@types/uuid": "^9.0.8",
         "@types/vscode": "^1.96.0",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
         "@vscode/test-electron": "^2.4.1",
         "eslint": "^8.57.1",
         "typescript": "^5.7.2"
+    },
+    "dependencies": {
+        "uuid": "^9.0.1"
     }
 }

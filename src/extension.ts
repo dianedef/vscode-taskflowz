@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { Task } from './task';
+import { TaskFlowsProvider } from './taskFlowsProvider';
 
 // Chargement du bundle de traduction
 const messages = {
@@ -13,16 +15,7 @@ function t(key: string): string {
 	return bundle[key as keyof typeof messages.en] || messages.en[key as keyof typeof messages.en];
 }
 
-class Task extends vscode.TreeItem {
-	constructor(
-		public readonly label: string,
-		public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
-	) {
-		super(label, collapsibleState);
-	}
-}
-
-class AddTaskItem extends Task {
+class AddTaskItem extends vscode.TreeItem {
 	constructor() {
 		super(t('addTaskLabel'), vscode.TreeItemCollapsibleState.None);
 		this.command = {
@@ -33,39 +26,11 @@ class AddTaskItem extends Task {
 	}
 }
 
-class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
-	private _onDidChangeTreeData: vscode.EventEmitter<Task | undefined | null | void> = new vscode.EventEmitter<Task | undefined | null | void>();
-	readonly onDidChangeTreeData: vscode.Event<Task | undefined | null | void> = this._onDidChangeTreeData.event;
-
-	private tasks: Task[] = [];
-
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
-	}
-
-	getTreeItem(element: Task): vscode.TreeItem {
-		return element;
-	}
-
-	getChildren(element?: Task): Thenable<Task[]> {
-		if (element) {
-			return Promise.resolve([]);
-		} else {
-			return Promise.resolve([...this.tasks, new AddTaskItem()]);
-		}
-	}
-
-	addTask(taskName: string) {
-		const task = new Task(taskName);
-		this.tasks.push(task);
-		this.refresh();
-	}
-}
-
 export function activate(context: vscode.ExtensionContext) {
-	const taskFlowsProvider = new TaskFlowsProvider();
+	const taskFlowsProvider = new TaskFlowsProvider(context);
 	vscode.window.registerTreeDataProvider('TaskFlows', taskFlowsProvider);
 
+	// Commande pour ajouter une tâche principale
 	let addTaskCommand = vscode.commands.registerCommand('taskflows.addTask', async () => {
 		const taskName = await vscode.window.showInputBox({
 			placeHolder: t('addTaskPlaceholder'),
@@ -77,7 +42,40 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(addTaskCommand);
+	// Commande pour ajouter une sous-tâche
+	let addSubTaskCommand = vscode.commands.registerCommand('taskflows.addSubTask', async (task: Task) => {
+		const taskName = await vscode.window.showInputBox({
+			placeHolder: t('addTaskPlaceholder'),
+			prompt: t('addTaskPrompt')
+		});
+
+		if (taskName) {
+			taskFlowsProvider.addTask(taskName, task);
+		}
+	});
+
+	// Commande pour supprimer une tâche
+	let deleteTaskCommand = vscode.commands.registerCommand('taskflows.deleteTask', (task: Task) => {
+		taskFlowsProvider.deleteTask(task);
+	});
+
+	// Commande pour basculer l'état de complétion d'une tâche
+	let toggleTaskCompletionCommand = vscode.commands.registerCommand('taskflows.toggleTaskCompletion', (task: Task) => {
+		taskFlowsProvider.toggleTaskCompletion(task);
+	});
+
+	// Commande pour plier/déplier toutes les tâches
+	let toggleAllCollapsedCommand = vscode.commands.registerCommand('taskflows.toggleAllCollapsed', () => {
+		taskFlowsProvider.toggleAllCollapsed();
+	});
+
+	context.subscriptions.push(
+		addTaskCommand,
+		addSubTaskCommand,
+		deleteTaskCommand,
+		toggleTaskCompletionCommand,
+		toggleAllCollapsedCommand
+	);
 }
 
 export function deactivate() {} 
