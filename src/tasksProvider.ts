@@ -32,7 +32,17 @@ export class TasksProvider implements vscode.TreeDataProvider<Task> {
     addSubTask(parentTask: Task, subTask: Task) {
         parentTask.children.push(subTask);
         if (parentTask.collapsibleState === vscode.TreeItemCollapsibleState.None) {
-            parentTask.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            const newParentTask = new Task(
+                parentTask.label,
+                vscode.TreeItemCollapsibleState.Expanded,
+                parentTask.children,
+                parentTask.completed,
+                parentTask.linkedResource
+            );
+            const index = this.tasks.indexOf(parentTask);
+            if (index !== -1) {
+                this.tasks[index] = newParentTask;
+            }
         }
         this._onDidChangeTreeData.fire();
     }
