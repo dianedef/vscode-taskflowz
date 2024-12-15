@@ -44,11 +44,6 @@
                 "command": "taskflows.toggleTaskCompletion",
                 "title": "%toggleTaskCompletion%",
                 "icon": "$(check)"
-            },
-            {
-                "command": "taskflows.toggleAllCollapsed",
-                "title": "%toggleAllCollapsed%",
-                "icon": "$(fold)"
             }
         ],
         "keybindings": [
@@ -63,11 +58,6 @@
                     "command": "taskflows.addTask",
                     "when": "view == TaskFlows",
                     "group": "navigation"
-                },
-                {
-                    "command": "taskflows.toggleAllCollapsed",
-                    "when": "view == TaskFlows",
-                    "group": "navigation@2"
                 }
             ],
             "view/item/context": [

@@ -10,11 +10,47 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
 
     private tasks: Task[] = [];
     private storage: vscode.Memento;
-    private allCollapsed: boolean = false;
+    private _treeView?: vscode.TreeView<Task>;
 
     constructor(private context: vscode.ExtensionContext) {
         this.storage = context.globalState;
         this.loadTasks();
+    }
+
+    // Setter pour le TreeView
+    setTreeView(treeView: vscode.TreeView<Task>) {
+        this._treeView = treeView;
+    }
+
+    // Implémentation de getParent requise par TreeDataProvider
+    getParent(element: Task): vscode.ProviderResult<Task> {
+        return element.parent;
+    }
+
+    // Méthode pour mettre à jour l'état de pliage de toutes les tâches
+    async setAllTasksCollapsibleState(expand: boolean) {
+        // Fonction récursive pour mettre à jour l'état
+        const updateTaskState = (task: Task): Task => {
+            const newState = task.children.length > 0 
+                ? (expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed)
+                : vscode.TreeItemCollapsibleState.None;
+
+            const updatedChildren = task.children.map(child => updateTaskState(child));
+            return new Task(
+                task.label,
+                newState,
+                updatedChildren,
+                task.completed,
+                task.linkedResource,
+                task.id,
+                task.parent
+            );
+        };
+
+        // Mettre à jour toutes les tâches principales
+        this.tasks = this.tasks.map(task => updateTaskState(task));
+        this.saveTasks();
+        this.refresh();
     }
 
     private loadTasks() {
@@ -42,73 +78,59 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
         return Promise.resolve(this.tasks);
     }
 
-    // Trouve une tâche par son ID dans toutes les tâches
-    findTaskById(id: string): Task | undefined {
-        for (const task of this.tasks) {
-            const found = task.findTaskById(id);
-            if (found) {
-                return found;
-            }
-        }
-        return undefined;
-    }
-
     addTask(taskName: string, parentTask?: Task) {
         const newTask = new Task(taskName);
         
         if (parentTask) {
-            // Fonction pour trouver la tâche racine
-            const findRootTask = (task: Task): Task => {
-                return task.parent ? findRootTask(task.parent) : task;
+            // Ajouter comme sous-tâche
+            parentTask.children.push(newTask);
+            newTask.parent = parentTask;
+
+            // Toujours mettre le parent en état expanded
+            const updatedParent = new Task(
+                parentTask.label,
+                vscode.TreeItemCollapsibleState.Expanded,
+                parentTask.children,
+                parentTask.completed,
+                parentTask.linkedResource,
+                parentTask.id,
+                parentTask.parent
+            );
+
+            // Fonction récursive pour trouver et mettre à jour une tâche dans l'arbre
+            const updateTaskInTree = (tasks: Task[], taskToUpdate: Task): boolean => {
+                for (let i = 0; i < tasks.length; i++) {
+                    if (tasks[i].id === taskToUpdate.id) {
+                        tasks[i] = taskToUpdate;
+                        return true;
+                    }
+                    if (tasks[i].children.length > 0) {
+                        if (updateTaskInTree(tasks[i].children, taskToUpdate)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             };
 
-            // Fonction pour mettre à jour une tâche et ses enfants
-            const updateTaskAndChildren = (task: Task, targetId: string): Task => {
-                if (task.id === targetId) {
-                    // C'est la tâche à mettre à jour
-                    const updatedChildren = [...task.children, newTask];
-                    const updatedTask = new Task(
-                        task.label,
-                        vscode.TreeItemCollapsibleState.Expanded,
-                        updatedChildren,
-                        task.completed,
-                        task.linkedResource,
-                        task.id,
-                        task.parent
-                    );
-                    // Mettre à jour les références parent
-                    updatedChildren.forEach(child => child.parent = updatedTask);
-                    return updatedTask;
+            // Mettre à jour le parent dans l'arbre complet
+            if (!updateTaskInTree(this.tasks, updatedParent)) {
+                // Si le parent n'est pas trouvé dans l'arbre, c'est une tâche principale
+                const index = this.tasks.indexOf(parentTask);
+                if (index !== -1) {
+                    this.tasks[index] = updatedParent;
                 }
-
-                if (task.children.some(child => child.id === targetId || child.findTaskById(targetId))) {
-                    // La tâche cible est dans les enfants, mettre à jour récursivement
-                    const updatedChildren = task.children.map(child => updateTaskAndChildren(child, targetId));
-                    const updatedTask = new Task(
-                        task.label,
-                        task.collapsibleState,
-                        updatedChildren,
-                        task.completed,
-                        task.linkedResource,
-                        task.id,
-                        task.parent
-                    );
-                    // Mettre à jour les références parent
-                    updatedChildren.forEach(child => child.parent = updatedTask);
-                    return updatedTask;
-                }
-
-                return task;
-            };
-
-            // Trouver la racine et mettre à jour l'arbre
-            const rootTask = findRootTask(parentTask);
-            const rootIndex = this.tasks.indexOf(rootTask);
-            
-            if (rootIndex !== -1) {
-                // Mettre à jour l'arbre à partir de la racine
-                this.tasks[rootIndex] = updateTaskAndChildren(rootTask, parentTask.id);
             }
+
+            // Mettre à jour les références parent
+            updatedParent.children.forEach(child => child.parent = updatedParent);
+
+            // Révéler la nouvelle tâche
+            this._treeView?.reveal(newTask, {
+                select: true,
+                focus: true,
+                expand: true
+            });
         } else {
             // Ajouter comme tâche principale
             this.tasks.push(newTask);
@@ -116,12 +138,6 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
         
         this.saveTasks();
         this.refresh();
-
-        // Forcer un rafraîchissement supplémentaire après un court délai
-        setTimeout(() => {
-            this.refresh();
-        }, 100);
-
         return newTask;
     }
 
@@ -204,33 +220,8 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
         }
     }
 
-    toggleAllCollapsed() {
-        this.allCollapsed = !this.allCollapsed;
-        const newState = this.allCollapsed ? 
-            vscode.TreeItemCollapsibleState.Collapsed : 
-            vscode.TreeItemCollapsibleState.Expanded;
-
-        // Fonction récursive pour mettre à jour l'état de toutes les tâches
-        const updateTaskState = (task: Task): Task => {
-            if (task.children.length > 0) {
-                const updatedChildren = task.children.map(child => updateTaskState(child));
-                return new Task(
-                    task.label,
-                    newState,
-                    updatedChildren,
-                    task.completed,
-                    task.linkedResource,
-                    task.id,
-                    task.parent
-                );
-            }
-            return task;
-        };
-
-        // Mettre à jour toutes les tâches principales
-        this.tasks = this.tasks.map(task => updateTaskState(task));
-        
-        this.saveTasks();
-        this.refresh();
+    // Obtenir toutes les tâches visibles
+    getVisibleTasks(): Task[] {
+        return this.tasks;
     }
 } 

@@ -15,20 +15,18 @@ function t(key: string): string {
 	return bundle[key as keyof typeof messages.en] || messages.en[key as keyof typeof messages.en];
 }
 
-class AddTaskItem extends vscode.TreeItem {
-	constructor() {
-		super(t('addTaskLabel'), vscode.TreeItemCollapsibleState.None);
-		this.command = {
-			command: 'taskflows.addTask',
-			title: t('addTask')
-		};
-		this.iconPath = new vscode.ThemeIcon('add');
-	}
-}
-
 export function activate(context: vscode.ExtensionContext) {
 	const taskFlowsProvider = new TaskFlowsProvider(context);
-	vscode.window.registerTreeDataProvider('TaskFlows', taskFlowsProvider);
+	
+	// Créer la TreeView avec le provider
+	const treeView = vscode.window.createTreeView('TaskFlows', {
+		treeDataProvider: taskFlowsProvider,
+		showCollapseAll: true,
+		canSelectMany: false
+	});
+
+	// Configurer la TreeView dans le provider
+	taskFlowsProvider.setTreeView(treeView);
 
 	// Commande pour ajouter une tâche principale
 	let addTaskCommand = vscode.commands.registerCommand('taskflows.addTask', async () => {
@@ -64,17 +62,12 @@ export function activate(context: vscode.ExtensionContext) {
 		taskFlowsProvider.toggleTaskCompletion(task);
 	});
 
-	// Commande pour plier/déplier toutes les tâches
-	let toggleAllCollapsedCommand = vscode.commands.registerCommand('taskflows.toggleAllCollapsed', () => {
-		taskFlowsProvider.toggleAllCollapsed();
-	});
-
 	context.subscriptions.push(
+		treeView,
 		addTaskCommand,
 		addSubTaskCommand,
 		deleteTaskCommand,
-		toggleTaskCompletionCommand,
-		toggleAllCollapsedCommand
+		toggleTaskCompletionCommand
 	);
 }
 
