@@ -9,12 +9,41 @@
     "categories": [
         "Other"
     ],
+    "activationEvents": [],
     "contributes": {
         "views": {
             "explorer": [
                 {
                     "id": "TaskFlows",
                     "name": "TaskFlows"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "taskflows.addTask",
+                "title": "Ajouter une tâche",
+                "icon": "$(add)"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "taskflows.addTask",
+                "key": "alt+n",
+                "when": "view == TaskFlows || editorFocus"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "taskflows.addTask",
+                    "when": "view == TaskFlows",
+                    "group": "primary"
+                },
+                {
+                    "command": "taskflows.addTask",
+                    "when": "view == TaskFlows",
+                    "group": "navigation@0"
                 }
             ]
         }
