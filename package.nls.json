@@ -1,0 +1,9 @@
+{
+    "displayName": "TaskFlowz",
+    "description": "Task management extension",
+    "viewName": "TaskFlows",
+    "addTask": "Add Task",
+    "addTaskLabel": "Add task...",
+    "addTaskPlaceholder": "Task name",
+    "addTaskPrompt": "Enter the name of the new task"
+} 

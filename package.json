@@ -1,7 +1,7 @@
 {
     "name": "taskflowz",
-    "displayName": "TaskFlowz",
-    "description": "Extension pour la gestion des tâches",
+    "displayName": "%displayName%",
+    "description": "%description%",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.85.0"
@@ -15,22 +15,21 @@
             "explorer": [
                 {
                     "id": "TaskFlows",
-                    "name": "TaskFlows"
+                    "name": "%viewName%"
                 }
             ]
         },
         "commands": [
             {
                 "command": "taskflows.addTask",
-                "title": "Ajouter une tâche",
+                "title": "%addTask%",
                 "icon": "$(add)"
             }
         ],
         "keybindings": [
             {
                 "command": "taskflows.addTask",
-                "key": "alt+n",
-                "when": "view == TaskFlows || editorFocus"
+                "key": "alt+n"
             }
         ],
         "menus": {

@@ -1,5 +1,18 @@
 import * as vscode from 'vscode';
 
+// Chargement du bundle de traduction
+const messages = {
+	en: require('../package.nls.json'),
+	fr: require('../package.nls.fr.json')
+};
+
+// Fonction helper pour obtenir la traduction
+function t(key: string): string {
+	const language = vscode.env.language;
+	const bundle = messages[language as keyof typeof messages] || messages.en;
+	return bundle[key as keyof typeof messages.en] || messages.en[key as keyof typeof messages.en];
+}
+
 class Task extends vscode.TreeItem {
 	constructor(
 		public readonly label: string,
@@ -11,10 +24,10 @@ class Task extends vscode.TreeItem {
 
 class AddTaskItem extends Task {
 	constructor() {
-		super("Ajouter une tâche...", vscode.TreeItemCollapsibleState.None);
+		super(t('addTaskLabel'), vscode.TreeItemCollapsibleState.None);
 		this.command = {
 			command: 'taskflows.addTask',
-			title: 'Ajouter une tâche'
+			title: t('addTask')
 		};
 		this.iconPath = new vscode.ThemeIcon('add');
 	}
@@ -50,15 +63,13 @@ class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('TaskFlowz est maintenant actif !');
-
 	const taskFlowsProvider = new TaskFlowsProvider();
 	vscode.window.registerTreeDataProvider('TaskFlows', taskFlowsProvider);
 
 	let addTaskCommand = vscode.commands.registerCommand('taskflows.addTask', async () => {
 		const taskName = await vscode.window.showInputBox({
-			placeHolder: 'Nom de la tâche',
-			prompt: 'Entrez le nom de la nouvelle tâche'
+			placeHolder: t('addTaskPlaceholder'),
+			prompt: t('addTaskPrompt')
 		});
 
 		if (taskName) {
