@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { Task } from './task';
 import { TaskFlowsProvider } from './taskFlowsProvider';
 
 // Chargement du bundle de traduction
@@ -48,32 +47,19 @@ export function activate(context: vscode.ExtensionContext) {
 		treeDataProvider: taskFlowsProvider,
 		showCollapseAll: true,
 		canSelectMany: false,
-		dragAndDropController: {
-			// Autoriser le glisser-déposer
-			dropMimeTypes: ['application/vnd.code.tree.taskflows'],
-			dragMimeTypes: ['application/vnd.code.tree.taskflows'],
-			// Gérer le glisser
-			handleDrag: (source: readonly Task[], dataTransfer: vscode.DataTransfer) => {
-				// Ajouter les données de la tâche au transfert
-				dataTransfer.set('application/vnd.code.tree.taskflows', new vscode.DataTransferItem(source[0]));
-			},
-			// Gérer le déposer
-			handleDrop: async (target: Task | undefined, dataTransfer: vscode.DataTransfer) => {
-				const transferItem = dataTransfer.get('application/vnd.code.tree.taskflows');
-				if (transferItem) {
-					const source = transferItem.value as Task;
-					taskFlowsProvider.handleDrop(source, target);
-				}
-			}
-		}
+		dragAndDropController: taskFlowsProvider
 	});
 
-	// Configurer la TreeView dans le provider
-	taskFlowsProvider.setTreeView(treeView);
-
 	// Commande pour éditer une tâche
-	let editTaskCommand = vscode.commands.registerCommand('taskflows.editTask', (task: Task) => {
-		taskFlowsProvider.startTaskEditing(task);
+	let editTaskCommand = vscode.commands.registerCommand('taskflows.editTask', async (item) => {
+		const newLabel = await createCenteredModal(
+			'Modifier la tâche',
+			'Entrez le nouveau nom de la tâche',
+			item.data.label
+		);
+		if (newLabel && newLabel !== item.data.label) {
+			taskFlowsProvider.updateTaskLabel(item.data.id, newLabel);
+		}
 	});
 
 	// Commande pour ajouter une tâche principale
@@ -89,25 +75,25 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	// Commande pour ajouter une sous-tâche
-	let addSubTaskCommand = vscode.commands.registerCommand('taskflows.addSubTask', async (task: Task) => {
+	let addSubTaskCommand = vscode.commands.registerCommand('taskflows.addSubTask', async (item) => {
 		const newName = await createCenteredModal(
 			'Nouvelle sous-tâche',
 			t('addTaskPlaceholder'),
 			''
 		);
 		if (newName) {
-			taskFlowsProvider.addTask(newName, task);
+			taskFlowsProvider.addTask(newName, item.data);
 		}
 	});
 
 	// Commande pour supprimer une tâche
-	let deleteTaskCommand = vscode.commands.registerCommand('taskflows.deleteTask', (task: Task) => {
-		taskFlowsProvider.deleteTask(task);
+	let deleteTaskCommand = vscode.commands.registerCommand('taskflows.deleteTask', (item) => {
+		taskFlowsProvider.deleteTask(item.data.id);
 	});
 
 	// Commande pour basculer l'état de complétion d'une tâche
-	let toggleTaskCompletionCommand = vscode.commands.registerCommand('taskflows.toggleTaskCompletion', (task: Task) => {
-		taskFlowsProvider.toggleTaskCompletion(task);
+	let toggleTaskCompletionCommand = vscode.commands.registerCommand('taskflows.toggleTaskCompletion', (item) => {
+		taskFlowsProvider.toggleTaskCompletion(item.data.id);
 	});
 
 	context.subscriptions.push(
