@@ -20,8 +20,24 @@ export class Task extends vscode.TreeItem {
         this.parent = parent;
         this.contextValue = 'task';
         this.tooltip = this.label;
-        this.description = completed ? '(Terminé)' : '';
-        this.iconPath = new vscode.ThemeIcon(completed ? 'check' : 'circle-outline');
+
+        if (completed) {
+            // Appliquer le style grisé pour les tâches complétées
+            this.iconPath = new vscode.ThemeIcon('check', new vscode.ThemeColor('disabledForeground'));
+            this.description = '(Terminé)';
+            this.tooltip = `${this.label} (Terminé)`;
+            
+            // Utiliser une classe CSS spéciale pour le style grisé
+            this.resourceUri = vscode.Uri.parse(`data:text/plain;base64,${Buffer.from(this.label).toString('base64')}`);
+            this.command = {
+                title: 'Toggle Task',
+                command: 'taskflows.toggleTaskCompletion',
+                arguments: [this]
+            };
+        } else {
+            this.iconPath = new vscode.ThemeIcon('circle-outline');
+            this.description = '';
+        }
 
         // Mettre à jour la référence parent pour tous les enfants
         this.children.forEach(child => child.parent = this);
