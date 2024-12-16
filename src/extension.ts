@@ -62,12 +62,35 @@ export function activate(context: vscode.ExtensionContext) {
 		taskFlowsProvider.toggleTaskCompletion(task);
 	});
 
+	// Commande pour éditer une tâche
+	let editTaskCommand = vscode.commands.registerCommand('taskflows.editTask', async (task: Task) => {
+		const newTaskName = await vscode.window.showInputBox({
+			placeHolder: t('editTaskPlaceholder'),
+			prompt: t('editTaskPrompt'),
+			value: task.label
+		});
+
+		if (newTaskName) {
+			const updatedTask = new Task(
+				newTaskName,
+				task.collapsibleState,
+				task.children,
+				task.completed,
+				task.linkedResource,
+				task.id,
+				task.parent
+			);
+			taskFlowsProvider.updateTask(task, updatedTask);
+		}
+	});
+
 	context.subscriptions.push(
 		treeView,
 		addTaskCommand,
 		addSubTaskCommand,
 		deleteTaskCommand,
-		toggleTaskCompletionCommand
+		toggleTaskCompletionCommand,
+		editTaskCommand
 	);
 }
 

@@ -8,6 +8,8 @@
     "addTaskPlaceholder": "Nom de la tâche",
     "addTaskPrompt": "Entrez le nom de la nouvelle tâche",
     "editTask": "Modifier la tâche",
+    "editTaskPlaceholder": "Nouveau nom de la tâche",
+    "editTaskPrompt": "Modifiez le nom de la tâche",
     "deleteTask": "Supprimer la tâche",
     "deleteTaskPrompt": "Êtes-vous sûr de vouloir supprimer cette tâche ?",
     "deleteConfirm": "Supprimer",

@@ -229,6 +229,31 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
         }
     }
 
+    // Mettre à jour une tâche existante
+    updateTask(oldTask: Task, updatedTask: Task) {
+        // Chercher dans les tâches principales
+        const index = this.tasks.indexOf(oldTask);
+        if (index > -1) {
+            this.tasks[index] = updatedTask;
+            updatedTask.children.forEach(child => child.parent = updatedTask);
+            this.saveTasks();
+            this.refresh();
+            return;
+        }
+
+        // Chercher dans les sous-tâches
+        if (oldTask.parent) {
+            const childIndex = oldTask.parent.children.indexOf(oldTask);
+            if (childIndex > -1) {
+                oldTask.parent.children[childIndex] = updatedTask;
+                updatedTask.children.forEach(child => child.parent = updatedTask);
+                this.saveTasks();
+                this.refresh();
+                return;
+            }
+        }
+    }
+
     // Obtenir toutes les tâches visibles
     getVisibleTasks(): Task[] {
         return this.tasks;
