@@ -53,8 +53,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// Commande pour éditer une tâche
 	let editTaskCommand = vscode.commands.registerCommand('taskflows.editTask', async (item) => {
 		const newLabel = await createCenteredModal(
-			'Modifier la tâche',
-			'Entrez le nouveau nom de la tâche',
+			t('editTaskTitle'),
+			t('editTaskInputPrompt'),
 			item.data.label
 		);
 		if (newLabel && newLabel !== item.data.label) {
@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Commande pour ajouter une tâche principale
 	let addTaskCommand = vscode.commands.registerCommand('taskflows.addTask', async () => {
 		const newName = await createCenteredModal(
-			'Nouvelle tâche',
+			t('newTaskTitle'),
 			t('addTaskPlaceholder'),
 			''
 		);
@@ -77,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Commande pour ajouter une sous-tâche
 	let addSubTaskCommand = vscode.commands.registerCommand('taskflows.addSubTask', async (item) => {
 		const newName = await createCenteredModal(
-			'Nouvelle sous-tâche',
+			t('newSubTaskTitle'),
 			t('addTaskPlaceholder'),
 			''
 		);

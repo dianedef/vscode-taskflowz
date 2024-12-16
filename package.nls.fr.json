@@ -15,5 +15,10 @@
     "deleteConfirm": "Supprimer",
     "deleteCancel": "Annuler",
     "toggleTaskCompletion": "Marquer comme terminé/non terminé",
-    "toggleAllCollapsed": "Plier/Déplier toutes les tâches"
+    "toggleAllCollapsed": "Plier/Déplier toutes les tâches",
+    "editTaskTitle": "Modifier la tâche",
+    "editTaskInputPrompt": "Entrez le nouveau nom de la tâche",
+    "newTaskTitle": "Nouvelle tâche",
+    "newSubTaskTitle": "Nouvelle sous-tâche",
+    "taskCompletedLabel": "(Terminé)"
 } 

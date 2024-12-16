@@ -80,6 +80,26 @@
                     "command": "taskflows.addSubTask",
                     "when": "view == TaskFlows && viewItem == task",
                     "group": "inline@4"
+                },
+                {
+                    "command": "taskflows.toggleTaskCompletion",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "1_modification@1"
+                },
+                {
+                    "command": "taskflows.editTask",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "1_modification@2"
+                },
+                {
+                    "command": "taskflows.deleteTask",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "1_modification@3"
+                },
+                {
+                    "command": "taskflows.addSubTask",
+                    "when": "view == TaskFlows && viewItem == task",
+                    "group": "2_creation@1"
                 }
             ]
         }
