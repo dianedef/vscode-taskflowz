@@ -72,10 +72,19 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
     }
 
     getChildren(element?: Task): Thenable<Task[]> {
+        const sortTasks = (tasks: Task[]): Task[] => {
+            return [...tasks].sort((a, b) => {
+                if (a.completed === b.completed) {
+                    return 0;
+                }
+                return a.completed ? 1 : -1;
+            });
+        };
+
         if (element) {
-            return Promise.resolve(element.children);
+            return Promise.resolve(sortTasks(element.children));
         }
-        return Promise.resolve(this.tasks);
+        return Promise.resolve(sortTasks(this.tasks));
     }
 
     addTask(taskName: string, parentTask?: Task) {
