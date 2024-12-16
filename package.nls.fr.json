@@ -2,6 +2,7 @@
     "displayName": "TaskFlowz",
     "description": "Extension pour la gestion des tâches",
     "viewName": "TaskFlows",
+    "focusTaskFlows": "Afficher TaskFlows",
     "addTask": "Ajouter une tâche",
     "addSubTask": "Ajouter une sous-tâche",
     "addTaskLabel": "Ajouter une tâche...",

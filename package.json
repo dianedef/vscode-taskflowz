@@ -2,8 +2,8 @@
     "name": "taskflowz",
     "displayName": "%displayName%",
     "description": "%description%",
-    "version": "0.0.1",
-    "publisher": "votre_nom",
+    "version": "2.0.1",
+    "publisher": "taskflowz",
     "private": true,
     "license": "MIT",
     "repository": {
@@ -11,7 +11,7 @@
         "url": "https://github.com/votre_repo/taskflowz"
     },
     "engines": {
-        "vscode": "^1.85.0"
+        "vscode": "^1.96.0"
     },
     "categories": [
         "Other"
@@ -196,7 +196,8 @@
         "dev": "tsc -watch -p ./",
         "pretest": "pnpm run compile && pnpm run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "package": "pnpm exec vsce package --no-dependencies"
     },
     "devDependencies": {
         "@types/mocha": "^10.0.10",
@@ -206,6 +207,7 @@
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
         "@vscode/test-electron": "^2.4.1",
+        "@vscode/vsce": "^3.2.1",
         "eslint": "^8.57.1",
         "typescript": "^5.7.2"
     },
