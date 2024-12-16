@@ -69,6 +69,11 @@
                 "command": "taskflows.toggleTaskCompletion",
                 "title": "%toggleTaskCompletion%",
                 "icon": "$(check)"
+            },
+            {
+                "command": "taskflows.undo",
+                "title": "Annuler",
+                "icon": "$(discard)"
             }
         ],
         "keybindings": [
@@ -121,6 +126,11 @@
             "view/title": [
                 {
                     "command": "taskflows.addTask",
+                    "when": "view == 'TaskFlows'",
+                    "group": "navigation"
+                },
+                {
+                    "command": "taskflows.undo",
                     "when": "view == 'TaskFlows'",
                     "group": "navigation"
                 }
