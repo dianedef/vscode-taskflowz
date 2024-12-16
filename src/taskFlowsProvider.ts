@@ -4,9 +4,13 @@ import { SerializedTask } from './types';
 
 const TASKS_STORAGE_KEY = 'taskflowz.tasks';
 
-export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
+export class TaskFlowsProvider implements vscode.TreeDataProvider<Task>, vscode.TreeDragAndDropController<Task> {
     private _onDidChangeTreeData: vscode.EventEmitter<Task | undefined | null | void> = new vscode.EventEmitter<Task | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<Task | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    // Propriétés pour le drag & drop
+    public readonly dropMimeTypes = ['application/vnd.code.tree.taskflows'];
+    public readonly dragMimeTypes = ['application/vnd.code.tree.taskflows'];
 
     private tasks: Task[] = [];
     private storage: vscode.Memento;
@@ -20,6 +24,94 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
     // Setter pour le TreeView
     setTreeView(treeView: vscode.TreeView<Task>) {
         this._treeView = treeView;
+    }
+
+    // Support du drag & drop
+    public readonly onDidChangeTreeData2: vscode.Event<Task | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    // Méthodes pour le drag & drop
+    async handleDrag(items: readonly Task[], dataTransfer: vscode.DataTransfer): Promise<void> {
+        const item = items[0]; // On prend le premier élément même si plusieurs sont sélectionnés
+        dataTransfer.set('application/vnd.code.tree.taskflows', new vscode.DataTransferItem(item));
+    }
+
+    async handleDrop(target: Task | undefined, dataTransfer: vscode.DataTransfer): Promise<void> {
+        const droppedItem = dataTransfer.get('application/vnd.code.tree.taskflows');
+        if (!droppedItem) {
+            return;
+        }
+
+        const source = droppedItem.value as Task;
+
+        // Vérifier que la source n'est pas déposée sur elle-même ou sur un de ses enfants
+        const isSourceOrChild = (task: Task): boolean => {
+            if (task === source) return true;
+            return task.children.some(child => isSourceOrChild(child));
+        };
+
+        if (target && isSourceOrChild(target)) {
+            return; // Empêcher le dépôt sur soi-même ou sur ses enfants
+        }
+
+        // Si on dépose sur rien, on met à la racine
+        if (!target) {
+            if (source.parent) {
+                // Retirer de l'ancien parent
+                const sourceIndex = source.parent.children.indexOf(source);
+                if (sourceIndex > -1) {
+                    source.parent.children.splice(sourceIndex, 1);
+                }
+                source.parent = undefined;
+            } else {
+                // Si déjà à la racine, on retire de la racine
+                const sourceIndex = this.tasks.indexOf(source);
+                if (sourceIndex > -1) {
+                    this.tasks.splice(sourceIndex, 1);
+                }
+            }
+            // Ajouter à la racine
+            this.tasks.push(source);
+        } else {
+            // Si on dépose sur une tâche
+            if (source.parent) {
+                // Retirer de l'ancien parent
+                const sourceIndex = source.parent.children.indexOf(source);
+                if (sourceIndex > -1) {
+                    source.parent.children.splice(sourceIndex, 1);
+                }
+            } else {
+                // Retirer de la racine
+                const sourceIndex = this.tasks.indexOf(source);
+                if (sourceIndex > -1) {
+                    this.tasks.splice(sourceIndex, 1);
+                }
+            }
+
+            // Ajouter au nouveau parent
+            target.children.push(source);
+            source.parent = target;
+
+            // Mettre à jour l'état du parent si nécessaire
+            if (target.collapsibleState === vscode.TreeItemCollapsibleState.None) {
+                const updatedTarget = new Task(
+                    target.label,
+                    vscode.TreeItemCollapsibleState.Expanded,
+                    target.children,
+                    target.completed,
+                    target.linkedResource,
+                    target.id,
+                    target.parent
+                );
+                this.updateTask(target, updatedTarget);
+            }
+        }
+
+        this.saveTasks();
+        this.refresh();
+    }
+
+    getDragUri(task: Task): vscode.Uri {
+        return vscode.Uri.parse(`taskflows:${task.id}`);
     }
 
     // Implémentation de getParent requise par TreeDataProvider

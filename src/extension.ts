@@ -47,7 +47,25 @@ export function activate(context: vscode.ExtensionContext) {
 	const treeView = vscode.window.createTreeView('TaskFlows', {
 		treeDataProvider: taskFlowsProvider,
 		showCollapseAll: true,
-		canSelectMany: false
+		canSelectMany: false,
+		dragAndDropController: {
+			// Autoriser le glisser-déposer
+			dropMimeTypes: ['application/vnd.code.tree.taskflows'],
+			dragMimeTypes: ['application/vnd.code.tree.taskflows'],
+			// Gérer le glisser
+			handleDrag: (source: readonly Task[], dataTransfer: vscode.DataTransfer) => {
+				// Ajouter les données de la tâche au transfert
+				dataTransfer.set('application/vnd.code.tree.taskflows', new vscode.DataTransferItem(source[0]));
+			},
+			// Gérer le déposer
+			handleDrop: async (target: Task | undefined, dataTransfer: vscode.DataTransfer) => {
+				const transferItem = dataTransfer.get('application/vnd.code.tree.taskflows');
+				if (transferItem) {
+					const source = transferItem.value as Task;
+					taskFlowsProvider.handleDrop(source, target);
+				}
+			}
+		}
 	});
 
 	// Configurer la TreeView dans le provider
