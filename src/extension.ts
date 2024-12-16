@@ -130,6 +130,11 @@ export function activate(context: vscode.ExtensionContext) {
 		taskFlowsProvider.undo();
 	});
 
+	// Commande pour rétablir la dernière action annulée
+	let redoCommand = vscode.commands.registerCommand('taskflows.redo', () => {
+		taskFlowsProvider.redo();
+	});
+
 	// Commande pour activer la vue TaskFlows
 	let focusCommand = vscode.commands.registerCommand('taskflows.focus', async () => {
 		// Ouvrir l'explorateur
@@ -156,7 +161,8 @@ export function activate(context: vscode.ExtensionContext) {
 		deleteTaskCommand,
 		toggleTaskCompletionCommand,
 		editTaskCommand,
-		undoCommand
+		undoCommand,
+		redoCommand
 	);
 }
 

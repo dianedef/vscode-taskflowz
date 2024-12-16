@@ -74,6 +74,11 @@
                 "command": "taskflows.undo",
                 "title": "Annuler",
                 "icon": "$(discard)"
+            },
+            {
+                "command": "taskflows.redo",
+                "title": "Rétablir",
+                "icon": "$(redo)"
             }
         ],
         "keybindings": [
@@ -132,7 +137,12 @@
                 {
                     "command": "taskflows.undo",
                     "when": "view == 'TaskFlows'",
-                    "group": "navigation"
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "taskflows.redo",
+                    "when": "view == 'TaskFlows'",
+                    "group": "navigation@2"
                 }
             ],
             "view/item/context": [

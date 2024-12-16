@@ -189,9 +189,24 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
         }
     }
 
+    // Méthode pour rétablir la dernière action annulée
+    redo() {
+        if (this.currentHistoryIndex < this.history.length - 1) {
+            this.currentHistoryIndex++;
+            this.tasks = JSON.parse(JSON.stringify(this.history[this.currentHistoryIndex]));
+            this.saveTasks();
+            this.refresh();
+        }
+    }
+
     // Méthode pour vérifier si undo est disponible
     canUndo(): boolean {
         return this.currentHistoryIndex > 0;
+    }
+
+    // Méthode pour vérifier si redo est disponible
+    canRedo(): boolean {
+        return this.currentHistoryIndex < this.history.length - 1;
     }
 
     // Méthode pour trouver le chemin vers une tâche
@@ -210,18 +225,28 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
 
     // Méthode pour révéler une tâche dans la vue
     async revealTask(taskId: string, treeView: vscode.TreeView<TaskTreeItem>): Promise<void> {
-        const path = this.findTaskPath(taskId);
-        if (!path) return;
+        // Attendre un court instant pour que l'arbre soit mis à jour
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Révéler chaque élément du chemin, du parent au fils
-        for (const task of path) {
-            const treeItem = new TaskTreeItem(task);
-            await treeView.reveal(treeItem, { expand: true, select: false });
+        const path = this.findTaskPath(taskId);
+        if (!path) {
+            return;
         }
 
-        // Sélectionner et donner le focus à la dernière tâche (celle qu'on cherche)
-        const finalTreeItem = new TaskTreeItem(path[path.length - 1]);
-        await treeView.reveal(finalTreeItem, { expand: true, select: true, focus: true });
+        try {
+            // Révéler chaque élément du chemin, du parent au fils
+            for (const task of path) {
+                const treeItem = new TaskTreeItem(task);
+                await treeView.reveal(treeItem, { expand: true, select: false, focus: false });
+            }
+
+            // Sélectionner et donner le focus à la dernière tâche (celle qu'on cherche)
+            const finalTreeItem = new TaskTreeItem(path[path.length - 1]);
+            await treeView.reveal(finalTreeItem, { expand: true, select: true, focus: true });
+        } catch (error) {
+            // Ignorer les erreurs de résolution d'éléments
+            console.log('Info: Tentative de révélation de la tâche ignorée');
+        }
     }
 
     // Méthode pour obtenir la première tâche disponible
