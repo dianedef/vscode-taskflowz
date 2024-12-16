@@ -15,6 +15,31 @@ function t(key: string): string {
 	return bundle[key as keyof typeof messages.en] || messages.en[key as keyof typeof messages.en];
 }
 
+// Fonction pour créer une modale centrée
+function createCenteredModal(title: string, placeholder: string, initialValue: string = ''): Promise<string | undefined> {
+	return new Promise((resolve) => {
+		const quickPick = vscode.window.createQuickPick();
+		quickPick.title = title;
+		quickPick.placeholder = placeholder;
+		quickPick.value = initialValue;
+		quickPick.buttons = [vscode.QuickInputButtons.Back];
+		quickPick.ignoreFocusOut = true;
+
+		quickPick.onDidAccept(() => {
+			const value = quickPick.value.trim();
+			quickPick.hide();
+			resolve(value || undefined);
+		});
+
+		quickPick.onDidHide(() => {
+			quickPick.dispose();
+			resolve(undefined);
+		});
+
+		quickPick.show();
+	});
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	const taskFlowsProvider = new TaskFlowsProvider(context);
 	
@@ -28,27 +53,32 @@ export function activate(context: vscode.ExtensionContext) {
 	// Configurer la TreeView dans le provider
 	taskFlowsProvider.setTreeView(treeView);
 
+	// Commande pour éditer une tâche
+	let editTaskCommand = vscode.commands.registerCommand('taskflows.editTask', (task: Task) => {
+		taskFlowsProvider.startTaskEditing(task);
+	});
+
 	// Commande pour ajouter une tâche principale
 	let addTaskCommand = vscode.commands.registerCommand('taskflows.addTask', async () => {
-		const taskName = await vscode.window.showInputBox({
-			placeHolder: t('addTaskPlaceholder'),
-			prompt: t('addTaskPrompt')
-		});
-
-		if (taskName) {
-			taskFlowsProvider.addTask(taskName);
+		const newName = await createCenteredModal(
+			'Nouvelle tâche',
+			t('addTaskPlaceholder'),
+			''
+		);
+		if (newName) {
+			taskFlowsProvider.addTask(newName);
 		}
 	});
 
 	// Commande pour ajouter une sous-tâche
 	let addSubTaskCommand = vscode.commands.registerCommand('taskflows.addSubTask', async (task: Task) => {
-		const taskName = await vscode.window.showInputBox({
-			placeHolder: t('addTaskPlaceholder'),
-			prompt: t('addTaskPrompt')
-		});
-
-		if (taskName) {
-			taskFlowsProvider.addTask(taskName, task);
+		const newName = await createCenteredModal(
+			'Nouvelle sous-tâche',
+			t('addTaskPlaceholder'),
+			''
+		);
+		if (newName) {
+			taskFlowsProvider.addTask(newName, task);
 		}
 	});
 
@@ -60,28 +90,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// Commande pour basculer l'état de complétion d'une tâche
 	let toggleTaskCompletionCommand = vscode.commands.registerCommand('taskflows.toggleTaskCompletion', (task: Task) => {
 		taskFlowsProvider.toggleTaskCompletion(task);
-	});
-
-	// Commande pour éditer une tâche
-	let editTaskCommand = vscode.commands.registerCommand('taskflows.editTask', async (task: Task) => {
-		const newTaskName = await vscode.window.showInputBox({
-			placeHolder: t('editTaskPlaceholder'),
-			prompt: t('editTaskPrompt'),
-			value: task.label
-		});
-
-		if (newTaskName) {
-			const updatedTask = new Task(
-				newTaskName,
-				task.collapsibleState,
-				task.children,
-				task.completed,
-				task.linkedResource,
-				task.id,
-				task.parent
-			);
-			taskFlowsProvider.updateTask(task, updatedTask);
-		}
 	});
 
 	context.subscriptions.push(

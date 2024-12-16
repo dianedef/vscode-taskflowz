@@ -5,9 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 export class Task extends vscode.TreeItem {
     public readonly id: string;
     public parent?: Task;
+    public isEditing: boolean = false;
 
     constructor(
-        public readonly label: string,
+        public label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None,
         public children: Task[] = [],
         public completed: boolean = false,
@@ -22,25 +23,25 @@ export class Task extends vscode.TreeItem {
         this.tooltip = this.label;
 
         if (completed) {
-            // Appliquer le style grisé pour les tâches complétées
             this.iconPath = new vscode.ThemeIcon('check', new vscode.ThemeColor('disabledForeground'));
             this.description = '(Terminé)';
             this.tooltip = `${this.label} (Terminé)`;
-            
-            // Utiliser une classe CSS spéciale pour le style grisé
-            this.resourceUri = vscode.Uri.parse(`data:text/plain;base64,${Buffer.from(this.label).toString('base64')}`);
-            this.command = {
-                title: 'Toggle Task',
-                command: 'taskflows.toggleTaskCompletion',
-                arguments: [this]
-            };
         } else {
             this.iconPath = new vscode.ThemeIcon('circle-outline');
             this.description = '';
         }
 
-        // Mettre à jour la référence parent pour tous les enfants
         this.children.forEach(child => child.parent = this);
+    }
+
+    startEditing() {
+        this.isEditing = true;
+        this.description = '(Édition en cours...)';
+    }
+
+    stopEditing() {
+        this.isEditing = false;
+        this.description = this.completed ? '(Terminé)' : '';
     }
 
     // Convertit une tâche en objet sérialisable

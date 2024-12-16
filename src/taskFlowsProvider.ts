@@ -91,11 +91,9 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
         const newTask = new Task(taskName);
         
         if (parentTask) {
-            // Ajouter comme sous-tâche
             parentTask.children.push(newTask);
             newTask.parent = parentTask;
 
-            // Toujours mettre le parent en état expanded
             const updatedParent = new Task(
                 parentTask.label,
                 vscode.TreeItemCollapsibleState.Expanded,
@@ -106,47 +104,30 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
                 parentTask.parent
             );
 
-            // Fonction récursive pour trouver et mettre à jour une tâche dans l'arbre
-            const updateTaskInTree = (tasks: Task[], taskToUpdate: Task): boolean => {
-                for (let i = 0; i < tasks.length; i++) {
-                    if (tasks[i].id === taskToUpdate.id) {
-                        tasks[i] = taskToUpdate;
-                        return true;
-                    }
-                    if (tasks[i].children.length > 0) {
-                        if (updateTaskInTree(tasks[i].children, taskToUpdate)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-
-            // Mettre à jour le parent dans l'arbre complet
-            if (!updateTaskInTree(this.tasks, updatedParent)) {
-                // Si le parent n'est pas trouvé dans l'arbre, c'est une tâche principale
+            if (!this.updateTaskInTree(this.tasks, updatedParent)) {
                 const index = this.tasks.indexOf(parentTask);
                 if (index !== -1) {
                     this.tasks[index] = updatedParent;
                 }
             }
 
-            // Mettre à jour les références parent
             updatedParent.children.forEach(child => child.parent = updatedParent);
 
-            // Révéler la nouvelle tâche
             this._treeView?.reveal(newTask, {
                 select: true,
                 focus: true,
                 expand: true
             });
         } else {
-            // Ajouter comme tâche principale
             this.tasks.push(newTask);
         }
         
         this.saveTasks();
         this.refresh();
+        
+        // Commencer l'édition immédiatement
+        this.startTaskEditing(newTask);
+        
         return newTask;
     }
 
@@ -252,6 +233,44 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<Task> {
                 return;
             }
         }
+    }
+
+    // Commencer l'édition d'une tâche
+    async startTaskEditing(task: Task) {
+        const newLabel = await vscode.commands.executeCommand<string>('taskflows.showCenteredInput', {
+            value: task.label,
+            title: 'Modifier la tâche',
+            placeholder: 'Entrez le nouveau nom de la tâche'
+        });
+
+        if (newLabel && newLabel !== task.label) {
+            const updatedTask = new Task(
+                newLabel,
+                task.collapsibleState,
+                task.children,
+                task.completed,
+                task.linkedResource,
+                task.id,
+                task.parent
+            );
+            this.updateTask(task, updatedTask);
+        }
+    }
+
+    // Mettre à jour une tâche dans l'arbre
+    private updateTaskInTree(tasks: Task[], taskToUpdate: Task): boolean {
+        for (let i = 0; i < tasks.length; i++) {
+            if (tasks[i].id === taskToUpdate.id) {
+                tasks[i] = taskToUpdate;
+                return true;
+            }
+            if (tasks[i].children.length > 0) {
+                if (this.updateTaskInTree(tasks[i].children, taskToUpdate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // Obtenir toutes les tâches visibles
