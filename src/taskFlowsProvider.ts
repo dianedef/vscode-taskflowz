@@ -1,9 +1,17 @@
 import * as vscode from 'vscode';
 import { TaskData } from './types';
 import { TaskTreeItem } from './taskTreeItem';
-import { v4 as uuidv4 } from 'uuid';
 
 const TASKS_STORAGE_KEY = 'taskflowz.tasks';
+
+// Compteur pour les IDs
+let idCounter = 0;
+
+// Fonction simple pour générer un ID unique
+function generateId(): string {
+    idCounter++;
+    return `task_${idCounter}`;
+}
 
 export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>, vscode.TreeDragAndDropController<TaskTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<TaskTreeItem | undefined | null | void> = new vscode.EventEmitter<TaskTreeItem | undefined | null | void>();
@@ -27,7 +35,7 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
         return element;
     }
 
-    getChildren(element?: TaskTreeItem): Thenable<TaskTreeItem[]> {
+    getChildren(element?: TaskTreeItem): Promise<TaskTreeItem[]> {
         const tasks = element ? element.data.children : this.tasks;
         if (!Array.isArray(tasks)) {
             return Promise.resolve([]);
@@ -82,7 +90,7 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
     addTask(label: string, parentTask?: TaskData) {
         this.saveToHistory();
         const newTask: TaskData = {
-            id: uuidv4(),
+            id: generateId(),
             label,
             completed: false,
             children: []
@@ -148,14 +156,16 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
     }
 
     private loadTasks() {
+        console.log('TaskFlowz: Chargement des tâches...');
         try {
             const storedTasks = this.storage.get<TaskData[]>(TASKS_STORAGE_KEY);
+            console.log('TaskFlowz: Tâches chargées:', storedTasks ? storedTasks.length : 0, 'tâches');
             this.tasks = Array.isArray(storedTasks) ? storedTasks : [];
             // Initialiser l'historique avec l'état initial
             this.history = [JSON.parse(JSON.stringify(this.tasks))];
             this.currentHistoryIndex = 0;
         } catch (error) {
-            console.error('Erreur lors du chargement des tâches:', error);
+            console.error('TaskFlowz: Erreur lors du chargement des tâches:', error);
             this.tasks = [];
             this.history = [[]];
             this.currentHistoryIndex = 0;
@@ -163,10 +173,17 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
     }
 
     private saveTasks() {
-        this.storage.update(TASKS_STORAGE_KEY, this.tasks);
+        console.log('TaskFlowz: Sauvegarde des tâches...');
+        try {
+            this.storage.update(TASKS_STORAGE_KEY, this.tasks);
+            console.log('TaskFlowz: Tâches sauvegardées avec succès');
+        } catch (error) {
+            console.error('TaskFlowz: Erreur lors de la sauvegarde des tâches:', error);
+        }
     }
 
     private refresh(): void {
+        console.log('TaskFlowz: Rafraîchissement de la vue...');
         this._onDidChangeTreeData.fire();
     }
 
@@ -225,15 +242,19 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
 
     // Méthode pour révéler une tâche dans la vue
     async revealTask(taskId: string, treeView: vscode.TreeView<TaskTreeItem>): Promise<void> {
+        console.log('TaskFlowz: Tentative de révélation de la tâche:', taskId);
+        
         // Attendre un court instant pour que l'arbre soit mis à jour
         await new Promise(resolve => setTimeout(resolve, 100));
 
         const path = this.findTaskPath(taskId);
         if (!path) {
+            console.log('TaskFlowz: Chemin vers la tâche non trouvé');
             return;
         }
 
         try {
+            console.log('TaskFlowz: Révélation du chemin de la tâche...');
             // Révéler chaque élément du chemin, du parent au fils
             for (const task of path) {
                 const treeItem = new TaskTreeItem(task);
@@ -241,19 +262,23 @@ export class TaskFlowsProvider implements vscode.TreeDataProvider<TaskTreeItem>,
             }
 
             // Sélectionner et donner le focus à la dernière tâche (celle qu'on cherche)
+            console.log('TaskFlowz: Sélection et focus de la tâche cible');
             const finalTreeItem = new TaskTreeItem(path[path.length - 1]);
             await treeView.reveal(finalTreeItem, { expand: true, select: true, focus: true });
+            console.log('TaskFlowz: Révélation de la tâche terminée avec succès');
         } catch (error) {
-            // Ignorer les erreurs de résolution d'éléments
-            console.log('Info: Tentative de révélation de la tâche ignorée');
+            console.log('TaskFlowz: Erreur ignorée lors de la révélation:', error);
         }
     }
 
     // Méthode pour obtenir la première tâche disponible
     getFirstTask(): TaskTreeItem | undefined {
+        console.log('TaskFlowz: Recherche de la première tâche...');
         if (this.tasks.length > 0) {
+            console.log('TaskFlowz: Première tâche trouvée:', this.tasks[0].label);
             return new TaskTreeItem(this.tasks[0]);
         }
+        console.log('TaskFlowz: Aucune tâche trouvée');
         return undefined;
     }
 } 

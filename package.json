@@ -1,217 +1,147 @@
 {
     "name": "taskflowz",
-    "displayName": "%displayName%",
-    "description": "%description%",
+    "displayName": "TaskFlowz",
+    "description": "A VS Code extension for managing tasks with a tree view",
     "version": "2.0.1",
-    "publisher": "taskflowz",
-    "private": true,
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/votre_repo/taskflowz"
-    },
     "engines": {
-        "vscode": "^1.96.0"
+        "vscode": "^1.93.1"
     },
     "categories": [
         "Other"
     ],
-    "keywords": [
-        "task",
-        "todo",
-        "productivity",
-        "organization",
-        "workflow"
-    ],
-    "galleryBanner": {
-        "color": "#C80000",
-        "theme": "dark"
-    },
     "activationEvents": [
         "onStartupFinished"
     ],
+    "main": "./out/extension.js",
     "contributes": {
-        "views": {
-            "explorer": [
-                {
-                    "id": "TaskFlows",
-                    "name": "%viewName%"
-                }
-            ]
-        },
         "commands": [
             {
-                "command": "taskflows.focus",
-                "title": "%focusTaskFlows%",
-                "icon": "$(list-tree)"
-            },
-            {
-                "command": "taskflows.addTask",
-                "title": "%addTask%",
+                "command": "taskFlowz.addTask",
+                "title": "Add Task",
                 "icon": "$(add)"
             },
             {
-                "command": "taskflows.addSubTask",
-                "title": "%addSubTask%",
-                "icon": "$(add)"
-            },
-            {
-                "command": "taskflows.editTask",
-                "title": "%editTask%",
-                "icon": "$(edit)"
-            },
-            {
-                "command": "taskflows.deleteTask",
-                "title": "%deleteTask%",
+                "command": "taskFlowz.deleteTask",
+                "title": "Delete Task",
                 "icon": "$(trash)"
             },
             {
-                "command": "taskflows.toggleTaskCompletion",
-                "title": "%toggleTaskCompletion%",
+                "command": "taskFlowz.editTask",
+                "title": "Edit Task",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "taskFlowz.toggleTask",
+                "title": "Toggle Task",
                 "icon": "$(check)"
             },
             {
-                "command": "taskflows.undo",
-                "title": "Annuler",
+                "command": "taskFlowz.collapseAll",
+                "title": "Collapse All",
+                "icon": "$(collapse-all)"
+            },
+            {
+                "command": "taskFlowz.focusTaskList",
+                "title": "Focus Task List"
+            },
+            {
+                "command": "taskFlowz.undo",
+                "title": "Undo Last Action",
                 "icon": "$(discard)"
             },
             {
-                "command": "taskflows.redo",
-                "title": "Rétablir",
-                "icon": "$(redo)"
+                "command": "taskFlowz.openWebView",
+                "title": "Ouvrir Web View",
+                "icon": "$(globe)"
             }
         ],
-        "keybindings": [
-            {
-                "command": "taskflows.focus",
-                "key": "alt+t",
-                "mac": "alt+t"
-            },
-            {
-                "command": "taskflows.addTask",
-                "key": "alt+n",
-                "mac": "alt+n"
-            },
-            {
-                "command": "taskflows.addSubTask",
-                "key": "alt+shift+n",
-                "mac": "alt+shift+n",
-                "when": "sideBarFocus"
-            },
-            {
-                "command": "taskflows.editTask",
-                "key": "f2",
-                "mac": "f2",
-                "when": "sideBarFocus"
-            },
-            {
-                "command": "taskflows.deleteTask",
-                "key": "ctrl+x",
-                "mac": "cmd+x",
-                "when": "sideBarFocus"
-            },
-            {
-                "command": "taskflows.toggleTaskCompletion",
-                "key": "ctrl+enter",
-                "mac": "cmd+enter",
-                "when": "sideBarFocus"
-            },
-            {
-                "command": "list.focusDown",
-                "key": "down",
-                "when": "view == TaskFlows && viewFocus"
-            },
-            {
-                "command": "list.focusUp",
-                "key": "up",
-                "when": "view == TaskFlows && viewFocus"
-            }
-        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "taskFlowz",
+                    "title": "TaskFlowz",
+                    "icon": "media/checklist.svg"
+                }
+            ]
+        },
+        "views": {
+            "taskFlowz": [
+                {
+                    "id": "taskFlowzView",
+                    "name": "Tasks",
+                    "icon": "media/checklist.svg",
+                    "contextualTitle": "TaskFlowz"
+                }
+            ]
+        },
         "menus": {
             "view/title": [
                 {
-                    "command": "taskflows.addTask",
-                    "when": "view == 'TaskFlows'",
+                    "command": "taskFlowz.addTask",
+                    "when": "view == taskFlowzView",
                     "group": "navigation"
                 },
                 {
-                    "command": "taskflows.undo",
-                    "when": "view == 'TaskFlows'",
-                    "group": "navigation@1"
+                    "command": "taskFlowz.collapseAll",
+                    "when": "view == taskFlowzView",
+                    "group": "navigation"
                 },
                 {
-                    "command": "taskflows.redo",
-                    "when": "view == 'TaskFlows'",
-                    "group": "navigation@2"
+                    "command": "taskFlowz.undo",
+                    "when": "view == taskFlowzView",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "taskflows.toggleTaskCompletion",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "inline@1"
+                    "command": "taskFlowz.addTask",
+                    "when": "view == taskFlowzView",
+                    "group": "inline"
                 },
                 {
-                    "command": "taskflows.editTask",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "inline@2"
+                    "command": "taskFlowz.editTask",
+                    "when": "view == taskFlowzView",
+                    "group": "inline"
                 },
                 {
-                    "command": "taskflows.deleteTask",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "inline@3"
+                    "command": "taskFlowz.deleteTask",
+                    "when": "view == taskFlowzView",
+                    "group": "inline"
                 },
                 {
-                    "command": "taskflows.addSubTask",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "inline@4"
-                },
-                {
-                    "command": "taskflows.toggleTaskCompletion",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "1_modification@1"
-                },
-                {
-                    "command": "taskflows.editTask",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "1_modification@2"
-                },
-                {
-                    "command": "taskflows.deleteTask",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "1_modification@3"
-                },
-                {
-                    "command": "taskflows.addSubTask",
-                    "when": "view == 'TaskFlows' && viewItem == task",
-                    "group": "2_creation@1"
+                    "command": "taskFlowz.toggleTask",
+                    "when": "view == taskFlowzView",
+                    "group": "inline"
                 }
             ]
-        }
+        },
+        "keybindings": [
+            {
+                "command": "taskFlowz.focusTaskList",
+                "key": "alt+t",
+                "mac": "cmd+t"
+            }
+        ]
     },
-    "main": "./out/extension.js",
     "scripts": {
-        "vscode:prepublish": "pnpm run compile",
+        "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
-        "dev": "tsc -watch -p ./",
-        "pretest": "pnpm run compile && pnpm run lint",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js",
-        "package": "pnpm exec vsce package --no-dependencies"
+        "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
-        "@types/mocha": "^10.0.10",
-        "@types/node": "~18.19.68",
-        "@types/uuid": "^9.0.8",
+        "@types/node": "18.x",
         "@types/vscode": "^1.96.0",
-        "@typescript-eslint/eslint-plugin": "^6.21.0",
-        "@typescript-eslint/parser": "^6.21.0",
-        "@vscode/test-electron": "^2.4.1",
-        "@vscode/vsce": "^3.2.1",
-        "eslint": "^8.57.1",
-        "typescript": "^5.7.2"
+        "@typescript-eslint/eslint-plugin": "^6.13.1",
+        "@typescript-eslint/parser": "^6.13.1",
+        "eslint": "^8.54.0",
+        "typescript": "^5.3.2"
     },
-    "dependencies": {
-        "uuid": "^9.0.1"
-    }
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/taskflowz.git"
+    },
+    "license": "MIT"
 }
